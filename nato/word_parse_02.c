@@ -1,15 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <ctype.h>
 
 char isterm(char * term);
 
 int main(int argc, char * argv[])
 {
   FILE * fp;
-  char phrase[64];
-  char *match;
-  char ch;
+  char buff[64] = "";
+  int ch, offset;
 
   if(argc < 2)
   {
@@ -22,22 +21,31 @@ int main(int argc, char * argv[])
   if(fp == NULL)
   {
     fprintf(stderr, "Unable to open file named %s\n", argv[1]);
+    exit(1);
   }
 
-  while(!feof(fp))
+  offset = 0;
+  while((ch = fgetc(fp)) != EOF)
   {
-    fgets(phrase, 64, fp);
-    match = strtok(phrase, " ");
-    while(match)
+    if(isalpha(ch))
     {
-      if((ch = isterm(match)) != '\0')
+      buff[offset++] = ch;
+
+      if(offset >= 64)
       {
-        putchar(ch);
+        fprintf(stderr, "The word %s is too long\n", buff);
+        exit(1);
       }
-      match = strtok(NULL, " ,.!?=()[]{}'\""); // null is used to keep searching for the same string
+    }else{
+      buff[offset] = '\0';
+      putchar(isterm(buff));
+      offset = 0;
     }
   }
-  return 0;
+  putchar('\n');
+  fclose(fp);
+
+  
 }
 
 char isterm(char* term){
